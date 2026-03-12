@@ -308,6 +308,9 @@
     .btn-start {
       background: #4caf50;
     }
+    .hidden {
+      display: none !important;
+    }
     .btn-pause {
       background: #24283a;
     }
@@ -440,7 +443,7 @@
       </div>
 
       <div class="controls">
-        <button class="btn btn-start" onclick="startTimer()">
+        <button id="startBtn" class="btn btn-start" onclick="startTimer()">
           <span class="btn-icon">▶</span><span>Start</span>
         </button>
         <button class="btn btn-pause" onclick="pauseTimer()">
@@ -579,6 +582,17 @@
       document.getElementById("setupScreen").style.display = "flex";
     }
 
+
+    function updateControls() {
+      const startBtn = document.getElementById("startBtn");
+      if (!startBtn) return;
+      if (timer != null) {
+        startBtn.classList.add("hidden");
+      } else {
+        startBtn.classList.remove("hidden");
+      }
+    }
+
     function updateDashboardUI() {
       if (!phases.length) return;
       const current = phases[currentIndex] || {
@@ -662,6 +676,8 @@
           nextMetaEl.textContent = "";
         }
       }
+
+      updateControls();
     }
 
     function startTimer() {
