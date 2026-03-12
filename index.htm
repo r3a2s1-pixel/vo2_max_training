@@ -1,427 +1,736 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>VO2 Max Training</title>
-
-<style>
-    :root {
-        --bg: #050710;
-        --card: #151827;
-        --accent: #4CAF50;
-        --accent-soft: rgba(76, 175, 80, 0.15);
-        --text-main: #ffffff;
-        --text-muted: #a5a8c3;
-        --border-soft: #262a3d;
-    }
-
-    * { 
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
-
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  />
+  <title>VO₂ Max Training</title>
+  <style>
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-        margin: 0;
-        padding: 0;
-        background: radial-gradient(circle at top, #1b2140 0, var(--bg) 55%);
-        color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: #050710;
+      color: #fff;
+    }
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .subtitle {
+      color: #a5a8c3;
+      font-size: 13px;
+      margin-top: 2px;
     }
 
-    .app {
-        max-width: 480px;
-        margin: 0 auto;
-        min-height: 100vh;
-        padding: 16px 16px 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
+    /* Setup screen */
+    #setupScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .setup-card {
+      margin-top: 24px;
+      background: #151827;
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid #262a3d;
+    }
+    .setup-question {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .preset-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+    .preset-btn {
+      flex: 1;
+      background: #1f2438;
+      border-radius: 16px;
+      padding: 14px 4px;
+      border: 1px solid #2d3450;
+      text-align: center;
+    }
+    .preset-min {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .preset-label {
+      font-size: 12px;
+      color: #a5a8c3;
+    }
+    .or-label {
+      margin-top: 4px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #a5a8c3;
+    }
+    .custom-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+    .custom-input {
+      flex: 1;
+      background: #0c0f1c;
+      border-radius: 12px;
+      border: 1px solid #262a3d;
+      padding: 8px 10px;
+      font-size: 16px;
+      color: #fff;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .custom-input::placeholder {
+      color: #6f7390;
+    }
+    .custom-set-btn {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(76, 175, 80, 0.15);
+      border: 1px solid #4caf50;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4caf50;
     }
 
-    .app-header {
-        text-align: left;
-        padding-top: 8px;
+    .alert-card {
+      margin-top: 16px;
+      background: #151827;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #262a3d;
+    }
+    .alert-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .alert-subtitle {
+      font-size: 12px;
+      color: #a5a8c3;
+    }
+    .alert-toggle-row {
+      display: flex;
+      flex-direction: row;
+      margin-top: 10px;
+      gap: 8px;
+    }
+    .toggle-chip {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid #262a3d;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      color: #a5a8c3;
+    }
+    .toggle-chip.active {
+      background: #4caf50;
+      border-color: #4caf50;
+      color: #fff;
     }
 
-    .app-title {
-        font-size: 24px;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-bottom: 4px;
+    .credit {
+      text-align: center;
+      font-size: 11px;
+      color: #6f7390;
+      margin-top: 12px;
+      margin-bottom: 8px;
     }
 
+    /* Dashboard screen */
+    #dashboardScreen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+    }
     .summary-card {
-        background: linear-gradient(135deg, #1e263d, #141827);
-        border-radius: 18px;
-        padding: 14px 16px;
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+      background: #1e263d;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 18px;
     }
-
     .summary-label {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-muted);
+      font-size: 12px;
+      color: #a5a8c3;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-
     .summary-value {
-        font-size: 26px;
-        font-weight: 700;
-        margin-top: 4px;
+      font-size: 34px;
+      font-weight: 700;
+      margin-top: 6px;
     }
 
     .cards {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
     .card {
-        background: var(--card);
-        border-radius: 18px;
-        padding: 16px;
-        border: 1px solid var(--border-soft);
+      flex: 1;
+      background: #151827;
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid #262a3d;
+      box-sizing: border-box;
     }
-
     .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-
     .card-title {
-        font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: var(--text-muted);
+      color: #a5a8c3;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
-
     .chip {
-        font-size: 11px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--border-soft);
-        color: var(--text-muted);
+      font-size: 11px;
+      color: #a5a8c3;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #262a3d;
     }
-
     .current-main {
-        text-align: center;
-        margin-top: 10px;
+      margin-top: 16px;
+      text-align: center;
     }
-
     .phase-name {
-        font-size: 20px;
-        font-weight: 700;
-        margin-bottom: 2px;
+      font-size: 22px;
+      font-weight: 700;
     }
-
     .phase-speed {
-        font-size: 13px;
-        color: var(--text-muted);
+      font-size: 13px;
+      color: #d0d3ea;
+      margin-top: 2px;
     }
-
     .timer {
-        font-size: 38px;
-        font-weight: 700;
-        margin-top: 12px;
-        letter-spacing: 0.05em;
+      font-size: 40px;
+      font-weight: 700;
+      margin-top: 12px;
     }
 
     .next-body {
-        margin-top: 8px;
-        font-size: 14px;
+      margin-top: 14px;
     }
-
     .next-name {
-        font-weight: 600;
+      font-size: 18px;
+      font-weight: 600;
     }
-
     .next-meta {
-        font-size: 12px;
-        color: var(--text-muted);
+      font-size: 13px;
+      color: #d0d3ea;
+      margin-top: 2px;
     }
 
-    .config-card {
-        background: var(--card);
-        border-radius: 18px;
-        padding: 16px;
-        border: 1px dashed var(--border-soft);
+    .pending-body {
+      margin-top: 12px;
+    }
+    .pending-text {
+      font-size: 13px;
+      color: #d0d3ea;
+      margin-bottom: 4px;
+    }
+    .pending-list {
+      max-height: 120px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .pending-line {
+      font-size: 12px;
+      color: #9ea2c5;
+      margin-bottom: 2px;
     }
 
-    .config-label {
-        font-size: 13px;
-        color: var(--text-muted);
-        margin-bottom: 4px;
+    /* Colored current card variants */
+    .current-warmup {
+      background: #2c1910;
+      border-color: #e67e22;
     }
-
-    .config-row {
-        display: flex;
-        gap: 8px;
+    .current-run {
+      background: #12301d;
+      border-color: #2ecc71;
     }
-
-    .config-input {
-        flex: 1;
-        padding: 10px;
-        border-radius: 12px;
-        border: 1px solid var(--border-soft);
-        background: #0c0f1c;
-        color: var(--text-main);
-        font-size: 16px;
+    .current-recovery {
+      background: #102331;
+      border-color: #3498db;
     }
-
-    .primary-text-btn {
-        padding: 10px 14px;
-        border-radius: 12px;
-        background: var(--accent-soft);
-        color: var(--accent);
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
+    .current-cooldown {
+      background: #1f1333;
+      border-color: #9b59b6;
     }
 
     .controls {
-        display: flex;
-        gap: 10px;
-        margin-top: auto;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 16px;
     }
-
     .btn {
-        flex: 1;
-        padding: 14px;
-        border-radius: 999px;
-        border: none;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+      flex: 1;
+      padding: 12px 8px;
+      border-radius: 999px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
-
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-secondary { background: #24283a; color: #fff; }
-    .btn-danger { background: #c0392b; color: #fff; }
-
+    .btn-start {
+      background: #4caf50;
+    }
+    .btn-pause {
+      background: #24283a;
+    }
+    .btn-reset {
+      background: #c0392b;
+    }
     .btn-icon {
-        font-size: 18px;
-        line-height: 1;
-        display: inline-block;
-        transform: translateY(1px);
+      font-size: 18px;
     }
-</style>
 
-<script>
-    let totalMinutes = 40;
-    const percentages = { warmup: 0.10, intervals: 0.80, cooldown: 0.10 };
+    button {
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- SETUP SCREEN -->
+    <div id="setupScreen">
+      <div>
+        <div class="header">
+          <div class="title">VO₂ max Training</div>
+          <div class="subtitle">
+            Choose your total workout time to generate intervals.
+          </div>
+        </div>
 
+        <div class="setup-card">
+          <div class="setup-question">How long do you want to run?</div>
+
+          <div class="preset-row">
+            <button class="preset-btn" onclick="configureWithMinutes(10)">
+              <div class="preset-min">10</div>
+              <div class="preset-label">minutes</div>
+            </button>
+            <button class="preset-btn" onclick="configureWithMinutes(15)">
+              <div class="preset-min">15</div>
+              <div class="preset-label">minutes</div>
+            </button>
+            <button class="preset-btn" onclick="configureWithMinutes(20)">
+              <div class="preset-min">20</div>
+              <div class="preset-label">minutes</div>
+            </button>
+          </div>
+
+          <div class="or-label">or set your own duration</div>
+          <div class="custom-row">
+            <input
+              id="customMinutesInput"
+              type="number"
+              class="custom-input"
+              placeholder="Enter minutes"
+              inputmode="numeric"
+            />
+            <button class="custom-set-btn" onclick="handleCustomSet()">
+              Set
+            </button>
+          </div>
+        </div>
+
+        <div class="alert-card">
+          <div class="alert-title">Vibration & sound alerts</div>
+          <div class="alert-subtitle">
+            Vibrate and play a short beep when a phase changes or the workout
+            finishes.
+          </div>
+          <div class="alert-toggle-row">
+            <button
+              id="alertsOnBtn"
+              class="toggle-chip active"
+              onclick="setAlerts(true)"
+            >
+              On
+            </button>
+            <button
+              id="alertsOffBtn"
+              class="toggle-chip"
+              onclick="setAlerts(false)"
+            >
+              Off
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="credit">App created by Muhammed Rashi</div>
+    </div>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboardScreen">
+      <div class="header">
+        <div class="title">VO₂ max Training</div>
+        <div class="subtitle">
+          Structured 4-minute intervals with warm-up &amp; cooldown.
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-label">Total Remaining</div>
+        <div class="summary-value" id="totalRemainingText">0:00</div>
+      </div>
+
+      <div class="cards">
+        <div class="card" id="currentCard">
+          <div class="card-header">
+            <div class="card-title">Current</div>
+            <div class="chip" id="currentStatusChip">Ready</div>
+          </div>
+          <div class="current-main">
+            <div class="phase-name" id="currentPhaseName">--</div>
+            <div class="phase-speed" id="currentPhaseSpeed">–</div>
+            <div class="timer" id="currentTime">0:00</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Next</div>
+            <div class="chip">Preview</div>
+          </div>
+          <div class="next-body">
+            <div class="next-name" id="nextPhaseName">--</div>
+            <div class="next-meta" id="nextPhaseMeta"></div>
+          </div>
+          <div class="pending-body">
+            <div class="pending-text" id="pendingCountText">--</div>
+            <div class="pending-list" id="pendingList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-start" onclick="startTimer()">
+          <span class="btn-icon">▶</span><span>Start</span>
+        </button>
+        <button class="btn btn-pause" onclick="pauseTimer()">
+          <span class="btn-icon">II</span><span>Pause</span>
+        </button>
+        <button class="btn btn-reset" onclick="resetConfirm()">
+          <span class="btn-icon">■</span><span>Reset</span>
+        </button>
+      </div>
+
+      <div class="credit">App created by Muhammed Rashi</div>
+    </div>
+  </div>
+
+  <!-- Simple beep sound -->
+  <audio
+    id="beepAudio"
+    preload="auto"
+    src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQwAAACAgICAgP///wAAAP///4CAgICA"
+  ></audio>
+
+  <script>
     let phases = [];
-    let i = 0;
-    let timeLeft = 0;
+    let currentIndex = 0;
+    let timeLeft = 0; // seconds
     let timer = null;
+    let alertsEnabled = true;
 
-    // Wake Lock
-    let wakeLock = null;
+    const beepAudio = document.getElementById("beepAudio");
 
-    async function requestWakeLock() {
-        try {
-            if ('wakeLock' in navigator) {
-                wakeLock = await navigator.wakeLock.request('screen');
-            }
-        } catch (e) {}
+    function playBeep() {
+      if (!alertsEnabled || !beepAudio) return;
+      try {
+        beepAudio.currentTime = 0;
+        beepAudio.play();
+      } catch (e) {
+        console.log("beep error", e);
+      }
     }
-
-    async function releaseWakeLock() {
-        try {
-            if (wakeLock) await wakeLock.release();
-            wakeLock = null;
-        } catch (e) {}
-    }
-
-    document.addEventListener("visibilitychange", async () => {
-        if (document.visibilityState === "visible" && timer && !wakeLock) {
-            await requestWakeLock();
-        }
-    });
 
     function recalcPhases(totalMinutes) {
-        const warm = Math.round(totalMinutes * percentages.warmup);
-        const ints = Math.round(totalMinutes * percentages.intervals);
-        const cool = Math.round(totalMinutes * percentages.cooldown);
+      const warm = Math.round(totalMinutes * 0.1);
+      const ints = Math.round(totalMinutes * 0.8);
+      const cool = Math.round(totalMinutes * 0.1);
 
-        const runMin = 4;
-        let possible = Math.floor(ints / runMin);
-        if (possible < 1) possible = 1;
-        if (possible > 4) possible = 4;
+      const runMin = 4;
 
-        const used = possible * runMin;
-        const recovery = ints - used;
-        const recEach = possible > 0 ? recovery / possible : 0;
+      let numIntervals = Math.floor(ints / (runMin + 1));
+      if (numIntervals < 1) numIntervals = 1;
+      if (numIntervals > 4) numIntervals = 4;
 
-        const out = [];
-        out.push({name:"Warm-Up", speed:"5–7 km/h", duration:warm});
+      const minTimeForPairs = numIntervals * (runMin + 1);
+      const extra = Math.max(0, ints - minTimeForPairs);
 
-        for (let x=1; x<=possible; x++) {
-            out.push({name:`Run ${x}`, speed:"8–10 km/h", duration:runMin});
-            if (recEach > 0) out.push({name:`Recovery ${x}`, speed:"4–6 km/h", duration:Math.round(recEach)});
+      const baseRecovery = 1 + Math.floor(extra / numIntervals);
+      const leftover = extra % numIntervals;
+
+      const list = [];
+
+      if (warm > 0) {
+        list.push({ name: "Warm-Up", speed: "5–7 km/h", duration: warm });
+      }
+
+      for (let i = 1; i <= numIntervals; i++) {
+        list.push({ name: `Run ${i}`, speed: "8–10 km/h", duration: runMin });
+        const recDur = baseRecovery + (i <= leftover ? 1 : 0);
+        list.push({
+          name: `Recovery ${i}`,
+          speed: "4–6 km/h",
+          duration: recDur,
+        });
+      }
+
+      if (cool > 0) {
+        list.push({ name: "Cool Down", speed: "4–5 km/h", duration: cool });
+      }
+
+      return list;
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return m + ":" + (s < 10 ? "0" + s : s);
+    }
+
+    function getPhaseType(name) {
+      const n = name.toLowerCase();
+      if (n.startsWith("warm")) return "warmup";
+      if (n.startsWith("run")) return "run";
+      if (n.startsWith("recovery")) return "recovery";
+      if (n.startsWith("cool")) return "cooldown";
+      return "other";
+    }
+
+    function configureWithMinutes(totalMinutes) {
+      if (!totalMinutes || totalMinutes <= 0) return;
+      phases = recalcPhases(totalMinutes);
+      currentIndex = 0;
+      timeLeft = phases[0].duration * 60;
+      stopTimerInternal();
+      showDashboard();
+      updateDashboardUI();
+    }
+
+    function handleCustomSet() {
+      const input = document.getElementById("customMinutesInput");
+      const val = parseInt(input.value, 10);
+      if (isNaN(val) || val <= 0) {
+        alert("Enter a valid number of minutes.");
+        return;
+      }
+      configureWithMinutes(val);
+    }
+
+    function setAlerts(on) {
+      alertsEnabled = on;
+      const onBtn = document.getElementById("alertsOnBtn");
+      const offBtn = document.getElementById("alertsOffBtn");
+      if (on) {
+        onBtn.classList.add("active");
+        offBtn.classList.remove("active");
+      } else {
+        offBtn.classList.add("active");
+        onBtn.classList.remove("active");
+      }
+    }
+
+    function showDashboard() {
+      document.getElementById("setupScreen").style.display = "none";
+      document.getElementById("dashboardScreen").style.display = "flex";
+    }
+
+    function showSetup() {
+      document.getElementById("dashboardScreen").style.display = "none";
+      document.getElementById("setupScreen").style.display = "flex";
+    }
+
+    function updateDashboardUI() {
+      if (!phases.length) return;
+      const current = phases[currentIndex] || {
+        name: "--",
+        speed: "–",
+        duration: 0,
+      };
+      const next =
+        phases[currentIndex + 1] ||
+        (currentIndex >= phases.length - 1
+          ? { name: "Finish 🎉", speed: "", duration: 0 }
+          : null);
+
+      // total remaining time
+      let totalRemaining = timeLeft;
+      for (let i = currentIndex + 1; i < phases.length; i++) {
+        totalRemaining += phases[i].duration * 60;
+      }
+      document.getElementById("totalRemainingText").textContent =
+        formatTime(totalRemaining);
+
+      // pending phases count + list
+      const remainingPhases = phases.slice(currentIndex + 1);
+      const pendingEl = document.getElementById("pendingCountText");
+      const pendingListEl = document.getElementById("pendingList");
+
+      pendingListEl.innerHTML = "";
+      if (remainingPhases.length === 0) {
+        pendingEl.textContent = "None – almost done!";
+      } else {
+        const n = remainingPhases.length;
+        pendingEl.textContent =
+          n + (n === 1 ? " phase remaining" : " phases remaining");
+
+        remainingPhases.forEach((p) => {
+          const line = document.createElement("div");
+          line.className = "pending-line";
+          line.textContent =
+            p.name +
+            " · " +
+            p.duration +
+            " min" +
+            (p.speed ? " • " + p.speed : "");
+          pendingListEl.appendChild(line);
+        });
+      }
+
+      // current
+      document.getElementById("currentPhaseName").textContent = current.name;
+      document.getElementById("currentPhaseSpeed").textContent =
+        current.speed || "–";
+      document.getElementById("currentTime").textContent =
+        formatTime(timeLeft);
+
+      document.getElementById("currentStatusChip").textContent =
+        timer == null ? "Ready" : "Running";
+
+      // current card color
+      const card = document.getElementById("currentCard");
+      card.className = "card"; // reset
+      const t = getPhaseType(current.name);
+      if (t === "warmup") card.classList.add("current-warmup");
+      else if (t === "run") card.classList.add("current-run");
+      else if (t === "recovery") card.classList.add("current-recovery");
+      else if (t === "cooldown") card.classList.add("current-cooldown");
+
+      // next
+      const nextNameEl = document.getElementById("nextPhaseName");
+      const nextMetaEl = document.getElementById("nextPhaseMeta");
+      if (!next) {
+        nextNameEl.textContent = "--";
+        nextMetaEl.textContent = "";
+      } else {
+        nextNameEl.textContent = next.name;
+        if (next.duration) {
+          nextMetaEl.textContent =
+            next.duration +
+            " min" +
+            (next.speed ? " • " + next.speed : "");
+        } else {
+          nextMetaEl.textContent = "";
         }
-
-        if (cool > 0) out.push({name:"Cool Down", speed:"4–5 km/h", duration:cool});
-
-        return out;
+      }
     }
 
-    function getTotalRemaining() {
-        let t = timeLeft;
-        for (let x=i+1;x<phases.length;x++){ t += phases[x].duration*60; }
-        return t;
+    function startTimer() {
+      if (!phases.length) return;
+      if (timer != null) return; // already running
+      timer = setInterval(tick, 1000);
+      updateDashboardUI();
+      playBeep(); // prime audio
     }
 
-    function format(sec) {
-        const m = Math.floor(sec/60);
-        const s = sec%60;
-        return m + ":" + (s<10?"0":"") + s;
-    }
-
-    function updateNext() {
-        const nextBox = document.getElementById("nextInfo");
-
-        if (i+1 >= phases.length) {
-            nextBox.innerHTML = "<div class='next-name'>Finish 🎉</div>";
-            return;
-        }
-
-        const p = phases[i+1];
-        nextBox.innerHTML = `
-            <div class="next-name">${p.name}</div>
-            <div class="next-meta">${p.duration} min • ${p.speed}</div>
-        `;
-    }
-
-    function updateUI() {
-        document.getElementById("totalRemaining").textContent = format(getTotalRemaining());
-        document.getElementById("phase").textContent = phases[i].name;
-        document.getElementById("speed").textContent = phases[i].speed;
-        document.getElementById("time").textContent = format(timeLeft);
-        updateNext();
-    }
-
-    async function start() {
-        if (!timer) {
-            await requestWakeLock();
-            timer = setInterval(async () => {
-                timeLeft--;
-                if (timeLeft <= 0) {
-                    i++;
-                    if (i >= phases.length) {
-                        clearInterval(timer);
-                        timer = null;
-                        await releaseWakeLock();
-                        alert("Workout complete!");
-                        return;
-                    }
-                    timeLeft = phases[i].duration * 60;
-                }
-                updateUI();
-            }, 1000);
-        }
-    }
-
-    async function pause() {
+    function pauseTimer() {
+      if (timer != null) {
         clearInterval(timer);
         timer = null;
-        await releaseWakeLock();
+        updateDashboardUI();
+      }
     }
 
-    async function reset() {
-        await pause();
-        i = 0;
-        timeLeft = phases[0].duration * 60;
-        updateUI();
+    function stopTimerInternal() {
+      if (timer != null) {
+        clearInterval(timer);
+        timer = null;
+      }
     }
 
-    function applyTime() {
-        const val = parseInt(document.getElementById("totalTimeInput").value);
-        if (isNaN(val) || val <= 0) return;
-
-        totalMinutes = val;
-        phases = recalcPhases(totalMinutes);
-        i = 0;
-        timeLeft = phases[0].duration*60;
-        updateUI();
-
-        document.getElementById("timeConfig").style.display = "none";
+    function resetConfirm() {
+      if (!phases.length) {
+        showSetup();
+        return;
+      }
+      const sure = confirm(
+        "Are you sure you want to reset and go back to the setup screen?"
+      );
+      if (sure) {
+        stopTimerInternal();
+        showSetup();
+      }
     }
 
-    window.onload = () => {
-        phases = recalcPhases(totalMinutes);
-        timeLeft = phases[0].duration * 60;
-        updateUI();
+    function tick() {
+      if (!phases.length) return;
+      timeLeft -= 1;
+      if (timeLeft <= 0) {
+        // completed phase
+        if (currentIndex + 1 >= phases.length) {
+          // workout done
+          stopTimerInternal();
+          timeLeft = 0;
+          updateDashboardUI();
+          if (alertsEnabled) {
+            if (navigator.vibrate) navigator.vibrate(500);
+            playBeep();
+            alert("Workout complete! Nice work 🙌");
+          }
+          return;
+        } else {
+          currentIndex += 1;
+          timeLeft = phases[currentIndex].duration * 60;
+          if (alertsEnabled) {
+            if (navigator.vibrate) navigator.vibrate(300);
+            playBeep();
+          }
+        }
+      }
+      updateDashboardUI();
     }
-</script>
-</head>
 
-<body>
-<div class="app">
-
-    <header class="app-header">
-        <h1 class="app-title">VO<sub>2</sub> max Training</h1>
-    </header>
-
-    <section class="summary-card">
-        <div class="summary-label">Total Remaining</div>
-        <div class="summary-value" id="totalRemaining">0:00</div>
-    </section>
-
-    <section class="cards">
-
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">Current</div>
-                <div class="chip">Running</div>
-            </div>
-            <div class="current-main">
-                <div class="phase-name" id="phase">Warm-Up</div>
-                <div class="phase-speed" id="speed">5–7 km/h</div>
-                <div class="timer" id="time">0:00</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">Next</div>
-                <div class="chip">Preview</div>
-            </div>
-            <div class="next-body" id="nextInfo"></div>
-        </div>
-
-        <div id="timeConfig" class="config-card">
-            <div class="config-label">Total workout time (minutes)</div>
-            <div class="config-row">
-                <input type="number" id="totalTimeInput" class="config-input" value="40">
-                <button class="primary-text-btn" onclick="applyTime()">Set</button>
-            </div>
-        </div>
-
-    </section>
-
-    <section class="controls">
-        <button class="btn btn-primary" onclick="start()">
-            <span class="btn-icon">▶</span>
-            <span>Start</span>
-        </button>
-        <button class="btn btn-secondary" onclick="pause()">
-            <span class="btn-icon">II</span>
-            <span>Pause</span>
-        </button>
-        <button class="btn btn-danger" onclick="reset()">
-            <span class="btn-icon">■</span>
-            <span>Reset</span>
-        </button>
-    </section>
-
-</div>
+    // init alerts state on load
+    setAlerts(true);
+  </script>
 </body>
 </html>
