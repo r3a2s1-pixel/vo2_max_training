@@ -115,7 +115,8 @@
       color: #4caf50;
     }
 
-    .alert-card {
+    .alert-card,
+    .history-entry-card {
       margin-top: 16px;
       background: #151827;
       border-radius: 16px;
@@ -151,6 +152,25 @@
       border-color: #4caf50;
       color: #fff;
     }
+    .history-entry-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .history-entry-copy {
+      flex: 1;
+    }
+    .history-btn {
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(76, 175, 80, 0.15);
+      border: 1px solid #4caf50;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4caf50;
+      white-space: nowrap;
+    }
 
     .credit {
       text-align: center;
@@ -161,7 +181,8 @@
     }
 
     /* Dashboard screen */
-    #dashboardScreen {
+    #dashboardScreen,
+    #historyScreen {
       flex: 1;
       display: none;
       flex-direction: column;
@@ -285,7 +306,8 @@
       border-color: #9b59b6;
     }
 
-    .controls {
+    .controls,
+    .history-actions {
       display: flex;
       flex-direction: row;
       justify-content: space-between;
@@ -317,12 +339,41 @@
     .btn-reset {
       background: #c0392b;
     }
+    .btn-secondary {
+      background: #24283a;
+    }
     .btn-icon {
       font-size: 18px;
     }
 
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+      padding-bottom: 10px;
+    }
+    .history-item {
+      background: #151827;
+      border: 1px solid #262a3d;
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .history-item-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .history-item-meta,
+    .history-empty {
+      font-size: 13px;
+      color: #a5a8c3;
+      line-height: 1.5;
+    }
+
     button {
       font-family: inherit;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -380,19 +431,29 @@
           <div class="alert-toggle-row">
             <button
               id="alertsOnBtn"
-              class="toggle-chip active"
+              class="toggle-chip"
               onclick="setAlerts(true)"
             >
               On
             </button>
             <button
               id="alertsOffBtn"
-              class="toggle-chip"
+              class="toggle-chip active"
               onclick="setAlerts(false)"
             >
               Off
             </button>
           </div>
+        </div>
+
+        <div class="history-entry-card">
+          <div class="history-entry-copy">
+            <div class="alert-title">Training history</div>
+            <div class="alert-subtitle">
+              View your completed workouts here.
+            </div>
+          </div>
+          <button class="history-btn" onclick="showHistory()">History</button>
         </div>
       </div>
 
@@ -456,39 +517,75 @@
 
       <div class="credit">App created by Muhammed Rashi</div>
     </div>
-  </div>
 
-  <!-- Simple beep sound -->
-  <audio
-    id="beepAudio"
-    preload="auto"
-    src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQwAAACAgICAgP///wAAAP///4CAgICA"
-  ></audio>
+    <!-- HISTORY SCREEN -->
+    <div id="historyScreen">
+      <div>
+        <div class="header">
+          <div class="title">Training History</div>
+          <div class="subtitle">Completed sessions saved on this device.</div>
+        </div>
+
+        <div class="history-actions">
+          <button class="btn btn-secondary" onclick="backToSetup()">Back</button>
+          <button class="btn btn-secondary" onclick="exportHistory()">Export</button>
+          <button class="btn btn-reset" onclick="clearHistory()">Clear</button>
+        </div>
+
+        <div class="history-list" id="historyList"></div>
+      </div>
+
+      <div class="credit">App created by Muhammed Rashi</div>
+    </div>
+  </div>
 
   <script>
     let phases = [];
     let currentIndex = 0;
-    let timeLeft = 0; // seconds
+    let timeLeft = 0;
     let timer = null;
-    let alertsEnabled = true;
+    let alertsEnabled = false;
+    let selectedMinutes = 0;
 
-    const beepAudio = document.getElementById("beepAudio");
+    function playBeep(type = "switch") {
+      if (!alertsEnabled) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
 
-    function playBeep() {
-      if (!alertsEnabled || !beepAudio) return;
-      try {
-        beepAudio.currentTime = 0;
-        beepAudio.play();
-      } catch (e) {
-        console.log("beep error", e);
+      function tone(freq, start, duration, volume) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + duration + 0.02);
       }
+
+      if (type === "finish") {
+        tone(523.25, now, 0.16, 0.05);
+        tone(659.25, now + 0.14, 0.18, 0.05);
+        tone(783.99, now + 0.30, 0.28, 0.05);
+      } else {
+        tone(660, now, 0.14, 0.045);
+        tone(880, now + 0.10, 0.12, 0.04);
+      }
+
+      setTimeout(() => {
+        try { ctx.close(); } catch (e) {}
+      }, 900);
     }
 
     function recalcPhases(totalMinutes) {
       const warm = Math.round(totalMinutes * 0.1);
       const ints = Math.round(totalMinutes * 0.8);
       const cool = Math.round(totalMinutes * 0.1);
-
       const runMin = 4;
 
       let numIntervals = Math.floor(ints / (runMin + 1));
@@ -497,10 +594,8 @@
 
       const minTimeForPairs = numIntervals * (runMin + 1);
       const extra = Math.max(0, ints - minTimeForPairs);
-
       const baseRecovery = 1 + Math.floor(extra / numIntervals);
       const leftover = extra % numIntervals;
-
       const list = [];
 
       if (warm > 0) {
@@ -510,11 +605,7 @@
       for (let i = 1; i <= numIntervals; i++) {
         list.push({ name: `Run ${i}`, speed: "8–10 km/h", duration: runMin });
         const recDur = baseRecovery + (i <= leftover ? 1 : 0);
-        list.push({
-          name: `Recovery ${i}`,
-          speed: "4–6 km/h",
-          duration: recDur,
-        });
+        list.push({ name: `Recovery ${i}`, speed: "4–6 km/h", duration: recDur });
       }
 
       if (cool > 0) {
@@ -541,6 +632,7 @@
 
     function configureWithMinutes(totalMinutes) {
       if (!totalMinutes || totalMinutes <= 0) return;
+      selectedMinutes = totalMinutes;
       phases = recalcPhases(totalMinutes);
       currentIndex = 0;
       timeLeft = phases[0].duration * 60;
@@ -574,14 +666,26 @@
 
     function showDashboard() {
       document.getElementById("setupScreen").style.display = "none";
+      document.getElementById("historyScreen").style.display = "none";
       document.getElementById("dashboardScreen").style.display = "flex";
     }
 
     function showSetup() {
       document.getElementById("dashboardScreen").style.display = "none";
+      document.getElementById("historyScreen").style.display = "none";
       document.getElementById("setupScreen").style.display = "flex";
     }
 
+    function showHistory() {
+      renderHistory();
+      document.getElementById("setupScreen").style.display = "none";
+      document.getElementById("dashboardScreen").style.display = "none";
+      document.getElementById("historyScreen").style.display = "flex";
+    }
+
+    function backToSetup() {
+      showSetup();
+    }
 
     function updateControls() {
       const startBtn = document.getElementById("startBtn");
@@ -595,71 +699,49 @@
 
     function updateDashboardUI() {
       if (!phases.length) return;
-      const current = phases[currentIndex] || {
-        name: "--",
-        speed: "–",
-        duration: 0,
-      };
+      const current = phases[currentIndex] || { name: "--", speed: "–", duration: 0 };
       const next =
         phases[currentIndex + 1] ||
         (currentIndex >= phases.length - 1
           ? { name: "Finish 🎉", speed: "", duration: 0 }
           : null);
 
-      // total remaining time
       let totalRemaining = timeLeft;
       for (let i = currentIndex + 1; i < phases.length; i++) {
         totalRemaining += phases[i].duration * 60;
       }
-      document.getElementById("totalRemainingText").textContent =
-        formatTime(totalRemaining);
+      document.getElementById("totalRemainingText").textContent = formatTime(totalRemaining);
 
-      // pending phases count + list
       const remainingPhases = phases.slice(currentIndex + 1);
       const pendingEl = document.getElementById("pendingCountText");
       const pendingListEl = document.getElementById("pendingList");
-
       pendingListEl.innerHTML = "";
       if (remainingPhases.length === 0) {
         pendingEl.textContent = "None – almost done!";
       } else {
         const n = remainingPhases.length;
-        pendingEl.textContent =
-          n + (n === 1 ? " phase remaining" : " phases remaining");
-
+        pendingEl.textContent = n + (n === 1 ? " phase remaining" : " phases remaining");
         remainingPhases.forEach((p) => {
           const line = document.createElement("div");
           line.className = "pending-line";
-          line.textContent =
-            p.name +
-            " · " +
-            p.duration +
-            " min" +
-            (p.speed ? " • " + p.speed : "");
+          line.textContent = p.name + " · " + p.duration + " min" + (p.speed ? " • " + p.speed : "");
           pendingListEl.appendChild(line);
         });
       }
 
-      // current
       document.getElementById("currentPhaseName").textContent = current.name;
-      document.getElementById("currentPhaseSpeed").textContent =
-        current.speed || "–";
-      document.getElementById("currentTime").textContent =
-        formatTime(timeLeft);
+      document.getElementById("currentPhaseSpeed").textContent = current.speed || "–";
+      document.getElementById("currentTime").textContent = formatTime(timeLeft);
+      document.getElementById("currentStatusChip").textContent = timer == null ? "Ready" : "Running";
 
-      document.getElementById("currentStatusChip").textContent =
-        timer == null ? "Ready" : "Running";
-
-      // current card color
       const card = document.getElementById("currentCard");
-      card.className = "card"; // reset
+      card.className = "card";
       const t = getPhaseType(current.name);
       if (t === "warmup") card.classList.add("current-warmup");
       else if (t === "run") card.classList.add("current-run");
       else if (t === "recovery") card.classList.add("current-recovery");
       else if (t === "cooldown") card.classList.add("current-cooldown");
 
-      // next
       const nextNameEl = document.getElementById("nextPhaseName");
       const nextMetaEl = document.getElementById("nextPhaseMeta");
       if (!next) {
@@ -667,14 +749,9 @@
         nextMetaEl.textContent = "";
       } else {
         nextNameEl.textContent = next.name;
-        if (next.duration) {
-          nextMetaEl.textContent =
-            next.duration +
-            " min" +
-            (next.speed ? " • " + next.speed : "");
-        } else {
-          nextMetaEl.textContent = "";
-        }
+        nextMetaEl.textContent = next.duration
+          ? next.duration + " min" + (next.speed ? " • " + next.speed : "")
+          : "";
       }
 
       updateControls();
@@ -682,10 +759,10 @@
 
     function startTimer() {
       if (!phases.length) return;
-      if (timer != null) return; // already running
+      if (timer != null) return;
       timer = setInterval(tick, 1000);
       updateDashboardUI();
-      playBeep(); // prime audio
+      playBeep("switch");
     }
 
     function pauseTimer() {
@@ -708,28 +785,86 @@
         showSetup();
         return;
       }
-      const sure = confirm(
-        "Are you sure you want to reset and go back to the setup screen?"
-      );
+      const sure = confirm("Are you sure you want to reset and go back to the setup screen?");
       if (sure) {
         stopTimerInternal();
         showSetup();
       }
     }
 
+    function getTrainingLogs() {
+      try {
+        return JSON.parse(localStorage.getItem("trainingLogs") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveTrainingLog() {
+      const logs = getTrainingLogs();
+      logs.push({
+        id: Date.now(),
+        date: new Date().toLocaleString(),
+        totalMinutes: selectedMinutes,
+        phases: phases.length,
+        title: `VO₂ Max ${selectedMinutes} min`
+      });
+      localStorage.setItem("trainingLogs", JSON.stringify(logs));
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById("historyList");
+      const logs = getTrainingLogs().slice().reverse();
+      if (!logs.length) {
+        historyList.innerHTML = '<div class="history-empty">No completed workouts yet.</div>';
+        return;
+      }
+      historyList.innerHTML = logs.map((log) => `
+        <div class="history-item">
+          <div class="history-item-title">${log.title || 'VO₂ Max Workout'}</div>
+          <div class="history-item-meta">
+            Date: ${log.date}<br>
+            Duration: ${log.totalMinutes || 0} minutes<br>
+            Completed: Yes
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function clearHistory() {
+      const sure = confirm("Clear all saved workout history?");
+      if (!sure) return;
+      localStorage.removeItem("trainingLogs");
+      renderHistory();
+    }
+
+    function exportHistory() {
+      const logs = getTrainingLogs();
+      if (!logs.length) {
+        alert("No history to export.");
+        return;
+      }
+      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "training-history.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
     function tick() {
       if (!phases.length) return;
       timeLeft -= 1;
       if (timeLeft <= 0) {
-        // completed phase
         if (currentIndex + 1 >= phases.length) {
-          // workout done
           stopTimerInternal();
           timeLeft = 0;
           updateDashboardUI();
+          saveTrainingLog();
           if (alertsEnabled) {
             if (navigator.vibrate) navigator.vibrate(500);
-            playBeep();
+            playBeep("finish");
             alert("Workout complete! Nice work 🙌");
           }
           return;
@@ -738,15 +873,15 @@
           timeLeft = phases[currentIndex].duration * 60;
           if (alertsEnabled) {
             if (navigator.vibrate) navigator.vibrate(300);
-            playBeep();
+            playBeep("switch");
           }
         }
       }
       updateDashboardUI();
     }
 
-    // init alerts state on load
-    setAlerts(true);
+    setAlerts(false);
+    showSetup();
   </script>
 </body>
 </html>
